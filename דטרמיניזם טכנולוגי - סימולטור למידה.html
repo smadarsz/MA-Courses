@@ -1,0 +1,2120 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="tool">
+  <meta name="design-style" content="moderne">
+  <title>מלכודת הדטרמיניזם הטכנולוגי — סימולטור דילמות בחינוך</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Frank+Ruhl+Libre:wght@400;700&family=Heebo:wght@400;500;700&family=Lexend:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Page and surfaces (Moderne) */
+      --background: #f4ecdc;
+      --surface-container-low: #fbf6ea;
+      --surface-container: #e9dcc0;
+      --surface-container-high: #e0cfaa;
+
+      /* Ink */
+      --on-surface: #2b2a26;
+      --on-surface-variant: #55524a;
+
+      /* Rules */
+      --outline: #2b2a26;
+      --outline-variant: #d9cdb3;
+
+      /* Accents */
+      --primary: #1f6f6b;
+      --on-primary: #ffffff;
+      --primary-container: #bcd9d2;
+      --on-primary-container: #17504d;
+      --secondary: #ad431b;
+      --tertiary: #e0a526;
+      --error: #9a1f3a;
+      --on-error: #ffffff;
+
+      /* Data series */
+      --data-1: #1f6f6b;
+      --data-2: #d9572b;
+      --data-3: #a87710;
+      --data-4: #6b4a2e;
+      --data-context: #a39880;
+
+      /* Fonts (Hebrew + Latin pairings) */
+      --font-headline: 'Frank Ruhl Libre', 'DM Serif Display', serif;
+      --font-body: 'Heebo', 'Lexend', sans-serif;
+      --font-label: 'Heebo', 'Lexend', sans-serif;
+
+      /* Shape */
+      --rounded: 9999px;
+      --rounded-lg: 2.25rem 0.5rem 2.25rem 0.5rem;
+      --rounded-full: 9999px;
+
+      /* Style effects */
+      --ink-border: 2px solid var(--outline);
+      --leaf-mirror: 0.5rem 2.25rem 0.5rem 2.25rem;
+      --mustard-wash: color-mix(in srgb, var(--tertiary) 45%, var(--background));
+      --mustard-soft: color-mix(in srgb, var(--tertiary) 22%, var(--surface-container-low));
+      --sage-soft: color-mix(in srgb, var(--primary-container) 55%, var(--surface-container-low));
+      --orange-soft: color-mix(in srgb, var(--data-2) 14%, var(--surface-container-low));
+      --orb-r: 2.25rem;
+      --orb-r-small: 1.75rem;
+      --orb-clearance: 11.5rem;
+      --orbs-rtl:
+        radial-gradient(circle at 4.375rem 4.25rem, color-mix(in srgb, var(--data-2) 90%, transparent) var(--orb-r-small), transparent calc(var(--orb-r-small) + 1px)),
+        radial-gradient(circle at 6.5rem 3.5rem, color-mix(in srgb, var(--primary) 85%, transparent) var(--orb-r), transparent calc(var(--orb-r) + 1px)),
+        radial-gradient(circle at 9rem 4.25rem, var(--tertiary) var(--orb-r), transparent calc(var(--orb-r) + 1px));
+
+      /* Shared semantic tokens */
+      --positive: #1f6f6b;
+      --warning: #825a06;
+      --focus: #1f6f6b;
+
+      /* Type scale (Focused Tool + generous Hebrew readability) */
+      --display-size: clamp(2rem, 1.5rem + 1.8vw, 2.85rem);
+      --headline-size: clamp(1.375rem, 1.15rem + 0.7vw, 1.75rem);
+      --subhead-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);
+      --body-size: clamp(0.98rem, 0.94rem + 0.2vw, 1.0625rem);
+      --label-size: 0.8125rem;
+
+      /* Spacing scale (4pt base) */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    /* Base reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { overflow-x: clip; margin: 0; padding: 0; }
+    header { position: static !important; }
+
+    body {
+      background-color: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+    }
+
+    .page-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-lg);
+      padding: var(--space-lg);
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+    .page-grid * { min-width: 0; }
+
+    /* Focus visibility */
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Title Block with Multiplied Orbs (RTL-adapted to inline-end / left) */
+    .title-block {
+      background-color: var(--surface-container-low);
+      background-image: var(--orbs-rtl);
+      background-blend-mode: multiply;
+      background-repeat: no-repeat;
+      border: var(--ink-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .title-block > * {
+      padding-inline-end: var(--orb-clearance);
+      max-width: 100%;
+    }
+
+    .title-kicker-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .stamp-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      border-radius: var(--rounded-full);
+      background: var(--secondary);
+      color: var(--on-primary);
+      padding: var(--space-xs) var(--space-md);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: none;
+      line-height: 1.4;
+    }
+
+    .ink-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      border-radius: var(--rounded-full);
+      background: var(--on-surface);
+      color: var(--background);
+      padding: var(--space-xs) var(--space-md);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      line-height: 1.4;
+    }
+
+    h1.hero-title {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: var(--display-size);
+      line-height: 1.2;
+      letter-spacing: 0;
+      margin: 0;
+      color: var(--on-surface);
+    }
+
+    h1.hero-title .accent-word {
+      color: var(--secondary);
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      font-size: var(--subhead-size);
+      font-weight: 500;
+      line-height: 1.55;
+      color: var(--primary);
+      max-width: 60ch;
+    }
+
+    /* Leaf cards */
+    .leaf-card {
+      border: var(--ink-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+    }
+
+    .leaf-card.leaf-mustard {
+      background: var(--mustard-wash);
+    }
+
+    .leaf-card.leaf-sage {
+      border-radius: var(--leaf-mirror);
+      background: var(--primary-container);
+    }
+
+    .leaf-card.leaf-mirror {
+      border-radius: var(--leaf-mirror);
+    }
+
+    /* Section Headings */
+    .section-heading {
+      font-family: var(--font-headline);
+      font-weight: 700;
+      font-size: var(--headline-size);
+      line-height: 1.25;
+      letter-spacing: 0;
+      margin: 0;
+      color: var(--on-surface);
+    }
+
+    .section-sub {
+      margin: 0;
+      font-size: var(--body-size);
+      line-height: 1.6;
+      color: var(--on-surface-variant);
+    }
+
+    /* Live HUD: Metrics & Progress */
+    .hud-section {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-md);
+    }
+
+    .hud-top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding-bottom: var(--space-sm);
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    .progress-cluster {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .progress-label {
+      font-weight: 700;
+      font-size: var(--label-size);
+      color: var(--on-surface);
+    }
+
+    .step-dots {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .step-dot {
+      width: 2rem;
+      height: 0.625rem;
+      border-radius: var(--rounded-full);
+      border: 1.5px solid var(--outline);
+      background: var(--surface-container);
+      transition: background-color var(--dur-short) var(--ease-out), transform var(--dur-short) var(--ease-out);
+    }
+
+    .step-dot.done {
+      background: var(--primary);
+    }
+
+    .step-dot.current {
+      background: var(--tertiary);
+      transform: scaleY(1.25);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-lg);
+    }
+
+    .metric-card {
+      border: var(--ink-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-lg);
+      background: var(--surface-container-low);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+      container-type: inline-size;
+    }
+
+    .metric-card:nth-child(even) {
+      border-radius: var(--leaf-mirror);
+    }
+
+    .metric-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .metric-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .metric-name {
+      font-weight: 700;
+      font-size: var(--subhead-size);
+      line-height: 1.3;
+      color: var(--on-surface);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .metric-theorist {
+      font-size: var(--label-size);
+      line-height: 1.45;
+      color: var(--on-surface-variant);
+    }
+
+    .metric-score-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .metric-value {
+      font-family: var(--font-headline);
+      font-size: clamp(1.75rem, 1.4rem + 1vw, 2.25rem);
+      font-weight: 700;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      color: var(--on-surface);
+    }
+
+    .metric-max {
+      font-family: var(--font-body);
+      font-size: var(--label-size);
+      font-weight: 500;
+      color: var(--on-surface-variant);
+    }
+
+    .delta-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--rounded-full);
+      font-size: var(--label-size);
+      font-weight: 700;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+      border: 1.5px solid var(--outline);
+    }
+
+    .delta-badge.pos {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+
+    .delta-badge.neg {
+      background: var(--orange-soft);
+      color: var(--error);
+    }
+
+    .delta-badge.neutral {
+      background: var(--surface-container);
+      color: var(--on-surface);
+    }
+
+    .gauge-track {
+      width: 100%;
+      height: 0.875rem;
+      border-radius: var(--rounded-full);
+      border: 1.5px solid var(--outline);
+      background: var(--surface-container);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: var(--rounded-full);
+      transition: width var(--dur-long) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+    }
+
+    .gauge-fill.agency {
+      background: var(--primary);
+    }
+
+    .gauge-fill.entangled {
+      background: var(--secondary);
+    }
+
+    .metric-status-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--rounded-full);
+      font-size: var(--label-size);
+      font-weight: 500;
+      line-height: 1.3;
+      background: var(--surface-container);
+      color: var(--on-surface);
+    }
+
+    /* Buttons (Moderne Pills) */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      min-height: 44px;
+      border-radius: var(--rounded);
+      padding: var(--space-sm) var(--space-lg);
+      font-family: var(--font-label);
+      font-size: var(--body-size);
+      font-weight: 500;
+      line-height: 1.4;
+      cursor: pointer;
+      border: var(--ink-border);
+      text-decoration: none;
+      transition: background-color var(--dur-micro) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--on-primary-container);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--on-primary);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--error);
+    }
+
+    .btn-tertiary {
+      background: var(--surface-container);
+      color: var(--on-surface);
+    }
+
+    .btn-tertiary:hover:not(:disabled) {
+      background: var(--surface-container-high);
+    }
+
+    .btn-sm {
+      min-height: 44px;
+      padding: var(--space-xs) var(--space-md);
+      font-size: var(--label-size);
+    }
+
+    /* Main Interactive Dilemma Stage */
+    .stage-container {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-lg);
+    }
+
+    .dilemma-card {
+      border: var(--ink-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-xl);
+      background: var(--surface-container-low);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .dilemma-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .dilemma-context {
+      margin: 0;
+      font-size: var(--body-size);
+      line-height: 1.75;
+      color: var(--on-surface);
+      max-width: 72ch;
+    }
+
+    .dilemma-question-box {
+      padding: var(--space-md) var(--space-lg);
+      border-radius: var(--leaf-mirror);
+      background: var(--mustard-soft);
+      border: var(--ink-border);
+      font-weight: 500;
+      line-height: 1.6;
+      color: var(--on-surface);
+    }
+
+    /* Choice Cards */
+    .choices-list {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-md);
+    }
+
+    .choice-btn {
+      width: 100%;
+      min-height: 56px;
+      text-align: start;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      padding: var(--space-lg);
+      border: var(--ink-border);
+      border-radius: var(--leaf-mirror);
+      background: var(--background);
+      color: var(--on-surface);
+      cursor: pointer;
+      transition: background-color var(--dur-short) var(--ease-out), box-shadow var(--dur-short) var(--ease-out), transform var(--dur-micro) var(--ease-out);
+    }
+
+    .choice-btn:nth-child(even) {
+      border-radius: var(--rounded-lg);
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      background: var(--surface-container);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    .choice-btn:disabled {
+      cursor: default;
+    }
+
+    .choice-btn.selected {
+      background: var(--primary-container);
+      box-shadow: 0 0 0 3px var(--primary);
+    }
+
+    .choice-btn.dimmed {
+      opacity: 0.68;
+      background: var(--surface-container-low);
+    }
+
+    .choice-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      width: 100%;
+    }
+
+    .choice-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--rounded-full);
+      background: var(--on-surface);
+      color: var(--background);
+      font-size: var(--label-size);
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .choice-btn.selected .choice-index {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+
+    .choice-title {
+      font-weight: 700;
+      font-size: var(--subhead-size);
+      line-height: 1.45;
+      color: var(--on-surface);
+    }
+
+    .choice-desc {
+      font-size: var(--body-size);
+      font-weight: 400;
+      line-height: 1.65;
+      color: var(--on-surface-variant);
+    }
+
+    /* Immediate Theoretical Feedback Panel */
+    .feedback-panel {
+      border: var(--ink-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-xl);
+      background: var(--sage-soft);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      animation: fadeSlideIn var(--dur-long) var(--ease-out);
+    }
+
+    .feedback-panel.tone-determinism {
+      background: var(--orange-soft);
+    }
+
+    .feedback-panel.tone-neutrality {
+      background: var(--mustard-soft);
+    }
+
+    .feedback-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding-bottom: var(--space-md);
+      border-bottom: 1.5px solid var(--outline-variant);
+    }
+
+    .feedback-stance-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .feedback-kicker {
+      font-size: var(--label-size);
+      font-weight: 700;
+      color: var(--on-surface-variant);
+    }
+
+    .feedback-stance-title {
+      margin: 0;
+      font-family: var(--font-headline);
+      font-size: var(--headline-size);
+      line-height: 1.3;
+      color: var(--on-surface);
+    }
+
+    .feedback-deltas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .feedback-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-md);
+    }
+
+    .feedback-paragraph {
+      margin: 0;
+      font-size: var(--body-size);
+      line-height: 1.7;
+      color: var(--on-surface);
+    }
+
+    .theory-callout {
+      padding: var(--space-md) var(--space-lg);
+      border-radius: var(--leaf-mirror);
+      background: var(--surface-container-low);
+      border: 1.5px solid var(--outline);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .theory-callout-title {
+      font-weight: 700;
+      font-size: var(--label-size);
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .theory-callout-text {
+      margin: 0;
+      font-size: var(--body-size);
+      line-height: 1.65;
+      color: var(--on-surface);
+    }
+
+    .feedback-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding-top: var(--space-sm);
+    }
+
+    /* Inline "How Scoring Works & Theoretical Legend" Section (Always visible in page body, NO popup/modal) */
+    .scoring-guide-card {
+      border: var(--ink-border);
+      border-radius: var(--leaf-mirror);
+      padding: var(--space-xl);
+      background: var(--surface-container-low);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .scoring-guide-header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      padding-bottom: var(--space-md);
+      border-bottom: 2px solid var(--outline);
+    }
+
+    .scoring-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-lg);
+    }
+
+    .scoring-pillar {
+      padding: var(--space-lg);
+      border: 1.5px solid var(--outline);
+      border-radius: var(--rounded-lg);
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .scoring-pillar:nth-child(even) {
+      border-radius: var(--leaf-mirror);
+      background: var(--sage-soft);
+    }
+
+    .scoring-pillar-title {
+      margin: 0;
+      font-weight: 700;
+      font-size: var(--subhead-size);
+      line-height: 1.4;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .scoring-pillar-text {
+      margin: 0;
+      font-size: var(--body-size);
+      line-height: 1.65;
+      color: var(--on-surface);
+    }
+
+    .scoring-legend-table {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .legend-item {
+      padding: var(--space-md);
+      border: 1.5px solid var(--outline);
+      border-radius: var(--rounded-lg);
+      background: var(--surface-container-low);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .legend-item.highlight-entangled {
+      background: var(--primary-container);
+    }
+
+    .legend-item.highlight-neutrality {
+      background: var(--mustard-soft);
+    }
+
+    .legend-item.highlight-determinism {
+      background: var(--orange-soft);
+    }
+
+    .legend-badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs);
+    }
+
+    .legend-title {
+      font-weight: 700;
+      font-size: var(--body-size);
+      line-height: 1.4;
+      color: var(--on-surface);
+    }
+
+    .legend-desc {
+      margin: 0;
+      font-size: var(--label-size);
+      line-height: 1.6;
+      color: var(--on-surface-variant);
+    }
+
+    /* Summary / End Screen */
+    .summary-card {
+      border: var(--ink-border);
+      border-radius: var(--rounded-lg);
+      padding: var(--space-xl);
+      background: var(--surface-container-low);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+      animation: fadeSlideIn var(--dur-long) var(--ease-out);
+    }
+
+    .profile-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: var(--space-xl);
+      align-items: center;
+    }
+
+    .profile-narrative {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .profile-title {
+      margin: 0;
+      font-family: var(--font-headline);
+      font-size: clamp(1.625rem, 1.3rem + 1vw, 2.25rem);
+      line-height: 1.25;
+      color: var(--on-surface);
+    }
+
+    .profile-desc {
+      margin: 0;
+      font-size: var(--body-size);
+      line-height: 1.75;
+      color: var(--on-surface);
+    }
+
+    .quadrant-box {
+      border: var(--ink-border);
+      border-radius: var(--leaf-mirror);
+      background: var(--background);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .quadrant-caption {
+      font-size: var(--label-size);
+      font-weight: 700;
+      color: var(--on-surface-variant);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .quadrant-svg {
+      width: 100%;
+      height: auto;
+      min-height: 240px;
+      display: block;
+    }
+
+    .journey-log {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .journey-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-md);
+    }
+
+    .journey-item {
+      padding: var(--space-md) var(--space-lg);
+      border: 1.5px solid var(--outline);
+      border-radius: var(--leaf-mirror);
+      background: var(--background);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+
+    .journey-item-main {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      flex: 1 1 300px;
+    }
+
+    .journey-item-title {
+      font-weight: 700;
+      font-size: var(--body-size);
+      line-height: 1.4;
+      color: var(--on-surface);
+    }
+
+    .journey-item-choice {
+      font-size: var(--label-size);
+      line-height: 1.5;
+      color: var(--on-surface-variant);
+    }
+
+    .discussion-box {
+      padding: var(--space-lg);
+      border: var(--ink-border);
+      border-radius: var(--rounded-lg);
+      background: var(--mustard-wash);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .discussion-list {
+      margin: 0;
+      padding-inline-start: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .discussion-list li {
+      line-height: 1.65;
+      color: var(--on-surface);
+    }
+
+    .summary-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .inline-status-msg {
+      font-size: var(--label-size);
+      font-weight: 500;
+      color: var(--primary);
+      line-height: 1.4;
+    }
+
+    /* Sources Footer */
+    .sources-footer {
+      border-top: 2px solid var(--outline);
+      padding-top: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      color: var(--on-surface-variant);
+      font-size: var(--label-size);
+      line-height: 1.65;
+    }
+
+    .sources-footer strong {
+      color: var(--on-surface);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 820px) {
+      .scoring-grid,
+      .scoring-legend-table,
+      .profile-hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-grid {
+        padding: var(--space-md);
+        gap: var(--space-md);
+      }
+      .title-block {
+        padding: var(--space-lg);
+        background-image: none;
+      }
+      .title-block > * {
+        padding-inline-end: 0;
+      }
+      .metrics-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .dilemma-card,
+      .feedback-panel,
+      .scoring-guide-card,
+      .summary-card {
+        padding: var(--space-lg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page-grid">
+    <!-- Opening Title Block -->
+    <header class="title-block">
+      <div class="title-kicker-row">
+        <span class="stamp-chip">
+          <i data-lucide="compass" aria-hidden="true" style="width:16px;height:16px;"></i>
+          סימולטור דילמות במנהיגות חינוכית
+        </span>
+        <span class="ink-chip">5 דילמות מעשיות</span>
+      </div>
+      <h1 class="hero-title">מלכודת <span class="accent-word">הדטרמיניזם הטכנולוגי</span></h1>
+      <p class="hero-subtitle">
+        האם הטכנולוגיה מחליפה את הפדגוגיה, או שהן שזורות זו בזו? קבלו החלטות ניהוליות ופדגוגיות בצמתים אמיתיים, עקבו בזמן אמת אחר ההשפעה על סוכנות המורה והפדגוגיה השזורה, וגלו היכן עמדתכם ממוקמת מול מחקרי החינוך והטכנולוגיה.
+      </p>
+    </header>
+
+    <!-- Live Telemetry HUD -->
+    <section class="hud-section" aria-label="מדדי הסימולציה והתקדמות">
+      <div class="hud-top-bar">
+        <div class="progress-cluster">
+          <span class="progress-label" id="progress-text">דילמה 1 מתוך 5</span>
+          <div class="step-dots" id="step-dots" aria-hidden="true"></div>
+        </div>
+        <button type="button" class="btn btn-tertiary btn-sm" id="reset-btn" onclick="handleResetClick(this)">
+          <i data-lucide="rotate-ccw" aria-hidden="true" style="width:16px;height:16px;"></i>
+          איפוס סימולציה
+        </button>
+      </div>
+
+      <div class="metrics-grid">
+        <!-- Metric 1: Teacher Agency -->
+        <article class="metric-card" aria-live="polite">
+          <div class="metric-header">
+            <div class="metric-title-wrap">
+              <span class="metric-name">
+                <i data-lucide="users" aria-hidden="true" style="width:18px;height:18px;color:var(--primary);"></i>
+                מדד סוכנות המורה
+              </span>
+              <span class="metric-theorist">
+                על פי מרטין אוליבר (2011) — המורה כמעצב/ת פדגוגי/ת מרכזי/ת
+              </span>
+            </div>
+            <span class="delta-badge neutral hidden" id="agency-delta-badge"></span>
+          </div>
+
+          <div class="metric-score-row">
+            <div>
+              <span class="metric-value" id="agency-score-val">50</span>
+              <span class="metric-max">/ 100</span>
+            </div>
+            <span class="status-pill" id="agency-status-pill">נקודת פתיחה מאוזנת</span>
+          </div>
+
+          <div class="gauge-track" role="progressbar" aria-label="מדד סוכנות המורה" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" id="agency-progressbar">
+            <div class="gauge-fill agency" id="agency-gauge-fill" style="width: 50%;"></div>
+          </div>
+        </article>
+
+        <!-- Metric 2: Entangled Pedagogy -->
+        <article class="metric-card" aria-live="polite">
+          <div class="metric-header">
+            <div class="metric-title-wrap">
+              <span class="metric-name">
+                <i data-lucide="git-merge" aria-hidden="true" style="width:18px;height:18px;color:var(--secondary);"></i>
+                מדד פדגוגיה שזורה
+              </span>
+              <span class="metric-theorist">
+                על פי טים פאונס (2022) ומרקו קאלץ (2019) — שזירה הדדית של כלי, מטרות והקשר
+              </span>
+            </div>
+            <span class="delta-badge neutral hidden" id="entangled-delta-badge"></span>
+          </div>
+
+          <div class="metric-score-row">
+            <div>
+              <span class="metric-value" id="entangled-score-val">50</span>
+              <span class="metric-max">/ 100</span>
+            </div>
+            <span class="status-pill" id="entangled-status-pill">נקודת פתיחה מאוזנת</span>
+          </div>
+
+          <div class="gauge-track" role="progressbar" aria-label="מדד פדגוגיה שזורה" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" id="entangled-progressbar">
+            <div class="gauge-fill entangled" id="entangled-gauge-fill" style="width: 50%;"></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Main Interactive Dilemma Stage -->
+    <section class="stage-container" id="dilemma-stage" aria-label="תרחיש הדילמה הפעיל">
+      <div class="dilemma-card" id="dilemma-card">
+        <div class="dilemma-meta">
+          <span class="stamp-chip" id="dilemma-badge">דילמה 1</span>
+          <span class="ink-chip" id="dilemma-topic-chip">תשתיות והצטיידות</span>
+        </div>
+        <h2 class="section-heading" id="dilemma-title"></h2>
+        <p class="dilemma-context" id="dilemma-context"></p>
+        <div class="dilemma-question-box" id="dilemma-question"></div>
+        <div class="choices-list" id="choices-list"></div>
+      </div>
+
+      <!-- Immediate Theoretical Feedback Panel -->
+      <article class="feedback-panel hidden" id="feedback-panel" aria-live="polite">
+        <div class="feedback-header">
+          <div class="feedback-stance-group">
+            <span class="feedback-kicker" id="feedback-kicker">ניתוח תיאורטי של ההחלטה</span>
+            <h3 class="feedback-stance-title" id="feedback-stance-title"></h3>
+          </div>
+          <div class="feedback-deltas" id="feedback-deltas"></div>
+        </div>
+
+        <div class="feedback-body">
+          <p class="feedback-paragraph" id="feedback-analysis"></p>
+          <div class="theory-callout">
+            <span class="theory-callout-title">
+              <i data-lucide="book-open" aria-hidden="true" style="width:16px;height:16px;"></i>
+              הדיאלוג עם הספרות המקצועית
+            </span>
+            <p class="theory-callout-text" id="feedback-theory-link"></p>
+          </div>
+        </div>
+
+        <div class="feedback-actions">
+          <button type="button" class="btn btn-primary" id="next-dilemma-btn" onclick="goToNextStep()">
+            <span>לדילמה הבאה</span>
+            <i data-lucide="arrow-left" aria-hidden="true" style="width:18px;height:18px;"></i>
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- End-of-Simulation Summary & Profile Screen -->
+    <section class="summary-card hidden" id="summary-section" aria-label="סיכום ופרופיל מנהיגותי">
+      <div class="dilemma-meta">
+        <span class="stamp-chip">סיכום הסימולציה</span>
+        <span class="ink-chip" id="summary-archetype-chip">פרופיל מנהיגותי</span>
+      </div>
+
+      <div class="profile-hero">
+        <div class="profile-narrative">
+          <h2 class="profile-title" id="profile-title"></h2>
+          <p class="profile-desc" id="profile-desc"></p>
+          <p class="profile-desc" id="profile-theory-note"></p>
+        </div>
+
+        <div class="quadrant-box">
+          <span class="quadrant-caption">מיקומך על מפת הדטרמיניזם והשזירה</span>
+          <svg class="quadrant-svg" id="quadrant-svg" viewBox="0 0 340 270" role="img" aria-label="גרף הממקם את הפרופיל המנהיגותי לפי סוכנות המורה ופדגוגיה שזורה">
+            <!-- Background quadrants -->
+            <rect x="44" y="22" width="136" height="106" fill="var(--surface-container-low)" stroke="var(--outline-variant)" stroke-width="1" />
+            <rect x="180" y="22" width="136" height="106" fill="var(--primary-container)" fill-opacity="0.55" stroke="var(--outline-variant)" stroke-width="1" />
+            <rect x="44" y="128" width="136" height="106" fill="var(--orange-soft)" stroke="var(--outline-variant)" stroke-width="1" />
+            <rect x="180" y="128" width="136" height="106" fill="var(--mustard-soft)" stroke="var(--outline-variant)" stroke-width="1" />
+
+            <!-- Axes -->
+            <line x1="180" y1="22" x2="180" y2="234" stroke="var(--outline)" stroke-width="2" stroke-dasharray="4 4" />
+            <line x1="44" y1="128" x2="316" y2="128" stroke="var(--outline)" stroke-width="2" stroke-dasharray="4 4" />
+            <rect x="44" y="22" width="272" height="212" fill="none" stroke="var(--outline)" stroke-width="2" />
+
+            <!-- Quadrant labels -->
+            <text x="248" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="var(--on-primary-container)">פדגוגיה שזורה</text>
+            <text x="112" y="42" text-anchor="middle" font-size="11" font-weight="700" fill="var(--on-surface-variant)">ניסוי שזור חלקית</text>
+            <text x="248" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="var(--warning)">אשליית הניטרליות</text>
+            <text x="112" y="222" text-anchor="middle" font-size="11" font-weight="700" fill="var(--error)">דטרמיניזם קשיח</text>
+
+            <!-- Axis captions -->
+            <text x="180" y="254" text-anchor="middle" font-size="11" font-weight="700" fill="var(--on-surface)">סוכנות המורה (0 → 100)</text>
+            <text x="18" y="128" text-anchor="middle" font-size="11" font-weight="700" fill="var(--on-surface)" transform="rotate(-90 18 128)">פדגוגיה שזורה (0 → 100)</text>
+
+            <!-- Plotted user marker -->
+            <circle id="quadrant-halo" cx="180" cy="128" r="14" fill="var(--secondary)" fill-opacity="0.25" />
+            <circle id="quadrant-point" cx="180" cy="128" r="7" fill="var(--secondary)" stroke="var(--outline)" stroke-width="2" />
+          </svg>
+        </div>
+      </div>
+
+      <div class="journey-log">
+        <h3 class="section-heading">יומן ההחלטות שלך לאורך הסימולציה</h3>
+        <div class="journey-grid" id="journey-grid"></div>
+      </div>
+
+      <div class="discussion-box">
+        <h3 class="section-heading">שאלות רפלקטיביות לדיון בצוות החינוכי</h3>
+        <ul class="discussion-list" id="discussion-list"></ul>
+      </div>
+
+      <div class="summary-actions">
+        <button type="button" class="btn btn-primary" onclick="restartSimulation()">
+          <i data-lucide="refresh-cw" aria-hidden="true" style="width:18px;height:18px;"></i>
+          התחלת סימולציה חדשה
+        </button>
+        <button type="button" class="btn btn-tertiary" onclick="exportSummaryReport()">
+          <i data-lucide="download" aria-hidden="true" style="width:18px;height:18px;"></i>
+          ייצוא סיכום ההחלטות (.txt)
+        </button>
+        <span class="inline-status-msg" id="export-status-msg" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <!-- Structured Inline Scoring Explanation & Theoretical Legend (Always in Page Body) -->
+    <section class="scoring-guide-card" aria-label="איך פועל הניקוד ומקרא התיאוריות">
+      <div class="scoring-guide-header">
+        <h2 class="section-heading">איך פועל הניקוד? מקרא המדדים והגישות התיאורטיות</h2>
+        <p class="section-sub">
+          שני המדדים נפתחים בנקודת איזון של <bdi dir="ltr">50</bdi> נקודות (בטווח <bdi dir="ltr">0–100</bdi>) ומשתנים באופן שקוף בהתאם להנחות העומדות מאחורי כל בחירה מנהיגותית.
+        </p>
+      </div>
+
+      <div class="scoring-grid">
+        <div class="scoring-pillar">
+          <h3 class="scoring-pillar-title">
+            <i data-lucide="users" aria-hidden="true" style="width:18px;height:18px;"></i>
+            מדד 1: סוכנות המורה (<bdi dir="ltr">Teacher Agency</bdi>)
+          </h3>
+          <p class="scoring-pillar-text">
+            מבוסס על ביקורתו של מרטין אוליבר (<bdi dir="ltr">Oliver, 2011</bdi>). כאשר הטכנולוגיה נתפסת כגורם השינוי היחיד, המורה נדחק לתפקיד של "משתנה מתערב" או "חסם" שיש לאלף להשתמש בכלי. בחירות המכירות בשיקול הדעת של המורה ובסוכנות משותפת מעלות מדד זה.
+          </p>
+        </div>
+
+        <div class="scoring-pillar">
+          <h3 class="scoring-pillar-title">
+            <i data-lucide="git-merge" aria-hidden="true" style="width:18px;height:18px;"></i>
+            מדד 2: פדגוגיה שזורה (<bdi dir="ltr">Entangled Pedagogy</bdi>)
+          </h3>
+          <p class="scoring-pillar-text">
+            מבוסס על טים פאונס (<bdi dir="ltr">Fawns, 2022</bdi>) ועל מיפוי הרצף הדטרמיניסטי של מרקו קאלץ (<bdi dir="ltr">Kalz, 2019</bdi>). בוחן עד כמה ההחלטה מחברת באופן הדדי בין כלי, פדגוגיה, ערכים והקשר — ומתחמקת הן מאשליית "טכנולוגיה תחילה" והן מאשליית "פדגוגיה תחילה".
+          </p>
+        </div>
+      </div>
+
+      <div class="scoring-legend-table">
+        <div class="legend-item highlight-entangled">
+          <div class="legend-badge-row">
+            <span class="legend-title">פדגוגיה שזורה ודטרמיניזם רך מבוקר</span>
+            <span class="delta-badge pos"><bdi dir="ltr">+12 עד +15</bdi></span>
+          </div>
+          <p class="legend-desc">
+            הכרה בכך שהכלי אינו ניטרלי ומזמן אפשרויות פעולה (<bdi dir="ltr">Affordances</bdi>), לצד סוכנות משותפת של מורים ותלמידים והרחבת מודל <bdi dir="ltr">TPACK</bdi> להקשרים אתיים וחברתיים.
+          </p>
+        </div>
+
+        <div class="legend-item highlight-neutrality">
+          <div class="legend-badge-row">
+            <span class="legend-title">אשליית הניטרליות ("פדגוגיה תחילה")</span>
+            <span class="delta-badge neutral"><bdi dir="ltr">+2 עד +5</bdi> / <bdi dir="ltr">-9 עד -12</bdi></span>
+          </div>
+          <p class="legend-desc">
+            שמירה מסוימת על סוכנות המורה, אך פגיעה במדד השזירה: תפיסת הטכנולוגיה כ"סבל פסיבי" מנותק מהעיצוב הפדגוגי (<bdi dir="ltr">Kalz, 2019; Fawns, 2022</bdi>).
+          </p>
+        </div>
+
+        <div class="legend-item highlight-determinism">
+          <div class="legend-badge-row">
+            <span class="legend-title">דטרמיניזם קשיח ומדדים כמותיים צרים</span>
+            <span class="delta-badge neg"><bdi dir="ltr">-8 עד -15</bdi></span>
+          </div>
+          <p class="legend-desc">
+            סיבתיות חד-כיוונית, החפצה, אוטונומיה טכנולוגית ומעגל ההייפ והאכזבה (<bdi dir="ltr">Selwyn, 2021; Webster, 2014; Roszak, 1986</bdi>) — שוחקים הן את סוכנות המורה והן את השזירה.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sources Footer -->
+    <footer class="sources-footer">
+      <div>
+        <strong>הבסיס התיאורטי של הסימולטור:</strong>
+        Chandler (1995) — רצף הדטרמיניזם הקשיח והרך; Winner (1977) — טכנולוגיה ככוח אוטונומי; Kalz (2019) — סיבתיות חד-כיוונית, החפצה, אוטונומיה טכנולוגית ואשליית הניטרליות; Oliver (2011) — סוכנות המורה; Webster (2014) ו-Roszak (1986) — הקשר חברתי-כלכלי וביקורת מדדים כמותיים; Selwyn (2021) — מעגל ההייפ, התקווה והאכזבה; Fawns (2022) — גישת הפדגוגיה השזורה (<bdi dir="ltr">Entangled Pedagogy</bdi>).
+      </div>
+    </footer>
+  </main>
+
+  <api-shim></api-shim>
+  <script>
+    const SCENARIOS = [
+      {
+        id: 1,
+        badge: `דילמה 1 מתוך 5`,
+        topic: `תשתיות, תקציבים והזמנות פעולה`,
+        title: `תוכנית "טאבלט לכל תלמיד" — קפיצה בהישגים או מלכודת ציפיות?`,
+        context: `רשות מקומית מציעה לבית הספר תקציב נרחב לרכישת טאבלטים אישיים לכל תלמיד ותלמידה, בתנאי שכל הצוות יעבור מיד לספרי לימוד דיגיטליים ולמערכת תרגול אחידה. בהנהלה מתלהבים מההזדמנות התקציבית ומהנרטיב הברור לציבור: "ברגע שלכל ילד יהיה מסך, הציונים יעלו והפדגוגיה תתחדש מעצמה".`,
+        question: `כמובילי ההחלטה בבית הספר, כיצד תנהלו את הצעת התקציב וההטמעה?`,
+        choices: [
+          {
+            id: `1a`,
+            label: `אפשרות א׳`,
+            title: `לאשר מיידית ולהכפיף את ההוראה למערכת ("המכשיר יוביל את השינוי")`,
+            desc: `לרכוש את הטאבלטים ולהגדיר יעד כמותי של מעבר מלא למסכים בכל הכיתות, מתוך אמונה שהכלי ייצור בהכרח למידה טובה יותר.`,
+            agencyDelta: -14,
+            entangledDelta: -15,
+            tone: `determinism`,
+            stance: `דטרמיניזם טכנולוגי קשיח וסיבתיות חד-כיוונית`,
+            analysis: `הבחירה נשענת על יתרונות הפשטות וגיוס המשאבים של הדטרמיניזם הטכנולוגי, אך נופלת ל"סיבתיות חד-כיוונית" (Monocausality): ההנחה שהכנסת כלי X תוביל תמיד לתוצאה פדגוגית Y בכל כיתה, תוך התעלמות מהשונות בין לומדים, מורים, תרבות בית-ספרית ורקע סוציו-אקונומי.`,
+            theoryLink: `מרקו קאלץ (2019) מזהיר מפני סיבתיות חד-כיוונית ואופטימיות יתר בעת הפיכת טכנולוגיה לזרם מרכזי. ניל סלווין (2021) מראה כיצד הכנסת כלי לכיתה ללא שינוי פדגוגי עמוק מובילה שוב ושוב ל"מעגל ההייפ, התקווה והאכזבה".`
+          },
+          {
+            id: `1b`,
+            label: `אפשרות ב׳`,
+            title: `לקבל את הטאבלטים ולהצהיר: "המכשיר הוא רק כלי ניטרלי, ההוראה לא תשתנה"`,
+            desc: `להכניס את הטאבלטים לכיתות כמחברת או ספר דיגיטלי בלבד, ולבקש מהמורים ללמד בדיוק באותן שיטות פרונטליות כמו קודם.`,
+            agencyDelta: 4,
+            entangledDelta: -10,
+            tone: `neutrality`,
+            stance: `אשליית הניטרליות ("פדגוגיה תחילה")`,
+            analysis: `אף שסוכנות המורה נשמרת לכאורה, הבחירה מפרידה באופן מלאכותי בין טכנולוגיה לפדגוגיה. הטאבלט אינו "כלי פסיבי" נטול השפעה — עצם נוכחותו בכיתה משנה קשב, שיתופיות ודרכי עבודה, והתעלמות מכך מחמיצה את האפשרות לעצב את השינוי.`,
+            theoryLink: `טים פאונס (2022) מכנה גישה זו "דטרמיניזם פדגוגי" (Pedagogy First / Technology Last), ומרקו קאלץ (2019) מציב את אשליית הניטרליות בקצה השני של הרצף הדטרמיניסטי — משום שגם היא מנתקת בין כלי לפדגוגיה.`
+          },
+          {
+            id: `1c`,
+            label: `אפשרות ג׳`,
+            title: `למנף את התקציב לעיצוב שזור: לבחון עם המורים והתלמידים מה הכלי מזמן ומה יש להתאים`,
+            desc: `לנצל את ההזדמנות התקציבית לתשתיות, אך להקים צוותי תכנון של מורים ותלמידים שיבחנו את הזמנות הפעולה (Affordances) של הטאבלט ויתאימו מטרות ופרקטיקות לכל הקשר כיתתי.`,
+            agencyDelta: 14,
+            entangledDelta: 15,
+            tone: `entangled`,
+            stance: `פדגוגיה שזורה ושימוש מושכל בגיוס משאבים`,
+            analysis: `גישה זו מנצלת את הכוח של נרטיב החדשנות לגיוס תקציבים ותשתיות, מבלי להיכנע לדטרמיניזם קשיח. במקום להכפיף את הכיתה למכשיר או להתעלם מאופיו, המורים והתלמידים שוזרים יחד מטרות למידה, ערכים ואת הזמנות הפעולה של הכלי.`,
+            theoryLink: `טים פאונס (2022) מדגיש כי הטכנולוגיה אינה ניטרלית — היא מזמינה דרכי פעולה מסוימות (Affordances) ומקשה על אחרות, אך אינה מכתיבה את התוצאה הסופית. התוצאה נוצרת משזירה הדדית ומסוכנות משותפת (Collective Agency).`
+          },
+          {
+            id: `1d`,
+            label: `אפשרות ד׳`,
+            title: `לחייב תסריט שימוש אחיד וקשיח לכל המורים בדיוק לפי הנחיות מפתחי התוכנה`,
+            desc: `להגדיר נוהל שימוש אחיד כדי להבטיח שכולם יפעילו את הטאבלטים באותה צורה מדויקת שתוכננה מראש.`,
+            agencyDelta: -12,
+            entangledDelta: -9,
+            tone: `determinism`,
+            stance: `החפצה (Reification) וכרסום בסוכנות המורה`,
+            analysis: `כאן באה לידי ביטוי "החפצה": התייחסות לטכנולוגיה כבעלת תכונות קבועות ואחידות, תוך ציפייה שכל בני האדם ישתמשו בה בדיוק באופן שחזו המפתחים או קובעי המדיניות — מה שהופך את המורה למבצע טכני בלבד.`,
+            theoryLink: `מרקו קאלץ (2019) מגדיר את ההחפצה כאחד המכשולים המרכזיים בהטמעת TEL, ומרטין אוליבר (2011) מראה כי גישה כזו מנטרלת את סוכנות המורה כמעצב פדגוגי.`
+          }
+        ]
+      },
+      {
+        id: 2,
+        badge: `דילמה 2 מתוך 5`,
+        topic: `אימוץ AI ומעגל ההייפ`,
+        title: `סערת הבינה המלאכותית — "מירוץ הסתגלות" או חשיבה ביקורתית?`,
+        context: `כלי בינה מלאכותית (AI) גנרטיביים נכנסים במהירות לחיי התלמידים. בדיון סוער בחדר המורים נשמעת הטענה: "ה-AI מתקדם מעצמו לפי לוח זמנים פנימי, ואם לא נכריח את כולם להשתמש בו בכל מקצוע כבר החודש — נישאר מאחור". מורים אחרים חוששים משחיקת תהליכי החשיבה העמוקה.`,
+        question: `איזו מדיניות בית-ספרית תגבשו מול כניסת ה-AI?`,
+        choices: [
+          {
+            id: `2a`,
+            label: `אפשרות א׳`,
+            title: `להכריז על "מירוץ הסתגלות": חובת שילוב AI בכל שיעור כדי לא לפגר מאחור`,
+            desc: `לדרוש מהמורים להדביק את הקצב של השוק הטכנולוגי ולהטמיע את הכלים החדשים מיידית בכל תחומי הדעת.`,
+            agencyDelta: -15,
+            entangledDelta: -12,
+            tone: `determinism`,
+            stance: `אוטונומיה טכנולוגית ומעגל ההייפ`,
+            analysis: `הבחירה מניחה שהטכנולוגיה היא כוח אוטונומי הפועל "מבחוץ" לחברה לפי חוקיות פנימית משלו, וכי תפקיד מערכת החינוך והמורים מתמצה בריצה מתמדת אחרי חידושים כדי להסתגל.`,
+            theoryLink: `לאנגדון וינר (1977), דניאל צ'נדלר (1995) ומרקו קאלץ (2019) מזהים תפיסה זו כ"אוטונומיה טכנולוגית". ניל סלווין (2021) מזכיר שמהרדיו ועד ה-AI, הבטחות מהפכניות ללא תשתית פדגוגית מובילות לאכזבה.`
+          },
+          {
+            id: `2b`,
+            label: `אפשרות ב׳`,
+            title: `להוביל הרחבת TPACK ודיאלוג שזור: למפות עם מורים ותלמידים הזדמנויות, גבולות ואתיקה`,
+            desc: `לשלב ניסויים מבוקרים לבחינת יכולות ה-AI לצד דיון פתוח בשאלות של אתיקה, מקור הידע, שוויון חברתי ואופי החשיבה שהכלי מעצב.`,
+            agencyDelta: 15,
+            entangledDelta: 15,
+            tone: `entangled`,
+            stance: `פדגוגיה שזורה, הרחבת TPACK ומודעות סוציולוגית`,
+            analysis: `במקום להיכנע לתכתיב חיצוני, בית הספר מפתח סוכנות משותפת של מורים, תלמידים ומומחי טכנולוגיה. נבחן כיצד ה-AI מאפשר חקירה מחד ומקשה על מאמץ קוגניטיבי מסוים מאידך, מתוך מודעות לערכים ולאינטרסים שמאחורי הכלי.`,
+            theoryLink: `טים פאונס (2022) מרחיב את מודל TPACK ומדגיש שבהוראה בעידן הדיגיטלי נדרשת מודעות אתית והבנת הקשרים חברתיים; פרנק ובסטר (2014) מזכיר שטכנולוגיה מגלמת אינטרסים כלכליים וערכים חברתיים.`
+          },
+          {
+            id: `2c`,
+            label: `אפשרות ג׳`,
+            title: `להגדיר את ה-AI כ"מחשבון משוכלל" — כלי עזר טכני שאין צורך לשנות בגללו את דרכי ההוראה וההערכה`,
+            desc: `להשאיר למורים חופש פעולה נקודתי, אך להניח שמשימות הבית, המבחנים והמטרות הפדגוגיות יכולים להישאר כפי שהיו.`,
+            agencyDelta: 3,
+            entangledDelta: -10,
+            tone: `neutrality`,
+            stance: `אשליית הניטרליות והפרדת הכלי מההקשר`,
+            analysis: `גישה זו מניחה בטעות שה-AI הוא כלי ניטרלי שאינו משפיע על צורת החשיבה, על מטרות ההוראה ועל תוקף ההערכה. בפועל, כלי שמפיק טקסטים ומודלים משנה את משמעות הכתיבה והלמידה עצמן.`,
+            theoryLink: `פאונס (2022) מראה שגם גישת "טכנולוגיה בסוף" מחטיאה את המציאות: הכלי והפדגוגיה קשורים זה בזה באופן הדדי ובלתי-נפרד, והתעלמות מהכלי יוצרת פער גובר בכיתה.`
+          }
+        ]
+      },
+      {
+        id: 3,
+        badge: `דילמה 3 מתוך 5`,
+        topic: `הצטיידות מול פיתוח מקצועי`,
+        title: `לוחות חכמים בכל כיתה או השקעה בזמן של המורים?`,
+        context: `תקציב הפיתוח השנתי של בית הספר מוגבל. גורמי חוץ מציעים לתקצב התקנת לוחות חכמים בכל הכיתות ("קל להציג הישג מוחשי ומדיד לציבור"). מנגד, צוות המורים מבקש להשקיע בזמן פיתוח פדגוגי משותף ובהתנסות מבוקרת בכלים דיגיטליים קיימים.`,
+        question: `כיצד תקצו את המשאבים ואת מעמד המורים בתהליך?`,
+        choices: [
+          {
+            id: `3a`,
+            label: `אפשרות א׳`,
+            title: `להשקיע את כל התקציב בלוחות חכמים ולקיים הדרכה טכנית קצרה כדי "ליישר קו" עם המורים`,
+            desc: `לתעדף רכש תשתיות בולט לעין, ולהגדיר חוסר התלהבות של מורים כחסם ארגוני שיש לפתור באמצעות סדנת תפעול אחידה.`,
+            agencyDelta: -15,
+            entangledDelta: -14,
+            tone: `determinism`,
+            stance: `כרסום בסוכנות המורה ואילוף לכלי`,
+            analysis: `הבחירה מעדיפה יעד כמותי נוח להצגה ניהולית על פני תהליך פדגוגי עמוק, ומגדירה את המורים כ"משתנה מתערב" או כחסם שיש לאלף להשתמש בלוח החכם, במקום לראות בהם את המובילים הפדגוגיים.`,
+            theoryLink: `מרטין אוליבר (2011) מבקר בחריפות מחקרים ומדיניות הרואים במורה חסם שיש לאלף להשתמש בכלי. תיאודור רוזאק (1986) ופרנק ובסטר (2014) מזהירים מהעדפת ספירת מכשירים על פני מהות החינוך.`
+          },
+          {
+            id: `3b`,
+            label: `אפשרות ב׳`,
+            title: `להקצות תקציב משולב למעבדות ניסוי פדגוגי בהובלת מורים נחשונים לבחינת פוטנציאל הכלי`,
+            desc: `לצייד חלק מהמרחבים באופן מדורג, ולתת למורים זמן מתוגמל לבדוק כיצד הכלי פועל בהקשרים כיתתיים שונים לפני הרחבה.`,
+            agencyDelta: 14,
+            entangledDelta: 14,
+            tone: `entangled`,
+            stance: `דטרמיניזם רך ביקורתי וטיפוח סוכנות מורים`,
+            analysis: `כאן בא לידי ביטוי שימוש מאוזן בגישת "דטרמיניזם רך" והליכה לכיוון פדגוגיה שזורה: הכרה בכך שהכלי מציב תנאים והזדמנויות פעולה (Affordances) שכדאי לבודד ולבחון בשטח, תוך מתן סוכנות אמיתית למורים לעצב את היישום.`,
+            theoryLink: `דניאל צ'נדלר (1995) ומרטין אוליבר (2011) מתארים את הדטרמיניזם הרך כגישה המכירה בסוכנות אנושית ובעיצוב הפדגוגי. התלהבות של מורים נחשונים (Drive for Innovation) הופכת לניסוי שטח אחראי.`
+          },
+          {
+            id: `3c`,
+            label: `אפשרות ג׳`,
+            title: `לוותר לחלוטין על ציוד דיגיטלי ולהתבסס על לוח וגיר בלבד בטענה שהטכנולוגיה חסרת ערך פדגוגי`,
+            desc: `להימנע מכל שילוב טכנולוגי ולהניח ששינוי פדגוגי אמיתי מתרחש אך ורק באמצעות דיבור וטקסט מסורתי.`,
+            agencyDelta: 5,
+            entangledDelta: -12,
+            tone: `neutrality`,
+            stance: `דטרמיניזם פדגוגי חד-צדדי`,
+            analysis: `אמנם המורים שומרים על שליטה בשיעור, אך הבחירה מתעלמת מהמציאות התרבותית-טכנולוגית ומהאפשרות שכלים דיגיטליים — כשהם שזורים נכון — מרחיבים דרכי הבעה, שיתוף והבנה.`,
+            theoryLink: `טים פאונס (2022) מצביע על כך שגם עמדת "פדגוגיה תחילה" קיצונית מפרידה באופן דיכוטומי בין פדגוגיה לטכנולוגיה, ומחמיצה את ההזדמנות לשזירה הדדית.`
+          }
+        ]
+      },
+      {
+        id: 4,
+        badge: `דילמה 4 מתוך 5`,
+        topic: `מדידת הצלחה ומעגל הרפורמות`,
+        title: `שיא בשעות מסך מול שחיקת המשמעות — איך מעריכים את הרפורמה?`,
+        context: `חצי שנה לאחר השקת פלטפורמת למידה מקוונת, רשת בתי הספר מבקשת דו"ח הערכה. לוח הבקרה הדיגיטלי מראה עלייה חדה בכניסות, בשעות המסך ובכמות התרגילים ("ביטים" של מידע שהועברו). אך בחדר המורים עולה דאגה שהלמידה הפכה טכנית ושטחית, עם ירידה בחשיבה עמוקה ובשיח ערכי.`,
+        question: `איזה מענה תגישו בדו"ח ההערכה ובהחלטת ההמשך?`,
+        choices: [
+          {
+            id: `4a`,
+            label: `אפשרות א׳`,
+            title: `להסתמך על נתוני המערכת — עלייה בשעות מסך ובמספר התרגילים מוכיחה שהטכנולוגיה הצליחה`,
+            desc: `להגיש דו"ח כמותי מבוסס-נתוני שימוש כדי לספק יציבות ניהולית ולהפחית עמימות מול הפיקוח.`,
+            agencyDelta: -12,
+            entangledDelta: -14,
+            tone: `determinism`,
+            stance: `צמצום החינוך למדדים כמותיים צרים`,
+            analysis: `נוח וקל להציג מדדים מדידים וברורים של כמות מחשבים ושעות מסך, אך הסתמכות עליהם בלבד מחטיאה את מהות החינוך ומבטלת את קולם המקצועי של המורים החשים בירידת האיכות.`,
+            theoryLink: `פרנק ובסטר (2014) ותיאודור רוזאק (1986) מבקרים בחריפות מדידת חדשנות חינוכית דרך ספירת מכשירים, שעות מסך ו"ביטים" של מידע, במקום בחינת ידע תיאורטי, ערכים ותהליכי חשיבה עמוקים.`
+          },
+          {
+            id: `4b`,
+            label: `אפשרות ב׳`,
+            title: `לבנות הערכה שזורה: להציג את תובנות המורים והתלמידים על עומק הלמידה ולשנות את אופן השילוב של המערכת`,
+            desc: `לחבר בין נתוני המערכת לבין הערכה איכותית של משמעות, ערכים והבנה, ולעצב מחדש עם הצוות מתי הכלי תורם ומתי יש לצמצם את נוכחותו.`,
+            agencyDelta: 15,
+            entangledDelta: 15,
+            tone: `entangled`,
+            stance: `הערכה שזורה ודיאלוג מתמיד`,
+            analysis: `החלטה זו מחזירה את הערכים, המשמעות האיכותית והמטרות החינוכיות למרכז השיח, ורואה במערכת המקוונת רכיב דינמי שיש להתאים ולהגביל לפי צורכי הלמידה והקשר הכיתה.`,
+            theoryLink: `פאונס (2022) מדגיש כי בפדגוגיה שזורה המטרות והערכים משפיעים על הכלי ועל השיטה באופן מתמשך; ובסטר (2014) ורוזאק (1986) מדגישים שתוכן ומהות החינוך קודמים למדדים הכמותיים.`
+          },
+          {
+            id: `4c`,
+            label: `אפשרות ג׳`,
+            title: `להכריז שהפלטפורמה "נכשלה", למחוק אותה מיד ולאמץ מוצר טכנולוגי חדש במקומה`,
+            desc: `לבטל את הפרויקט הנוכחי בעקבות האכזבה, ולהשיק רפורמה דיגיטלית חדשה עם ספק אחר לשנה הבאה.`,
+            agencyDelta: -8,
+            entangledDelta: -12,
+            tone: `determinism`,
+            stance: `רפורמות שמוחקות רפורמות ומעגל האכזבה`,
+            analysis: `נטישת כלי אחד וריצה מידית לכלי הבא ללא בירור פדגוגי משחזרות בדיוק את מעגל הציפיות והאכזבות: שוב מצפים שהכלי החדש יעשה את העבודה מעצמו, ושוב נשארים עם אכזבה.`,
+            theoryLink: `מרקו קאלץ (2019) מצביע על "רפורמות שמוחקות רפורמות קודמות" כתופעת לוואי של דטרמיניזם טכנולוגי, וניל סלווין (2021) מתאר זאת כ"מעגל ההייפ, התקווה והאכזבה".`
+          }
+        ]
+      },
+      {
+        id: 5,
+        badge: `דילמה 5 מתוך 5`,
+        topic: `סמכות ההחלטה ואינטרסים חברתיים`,
+        title: `אלגוריתם למידה "סגור" — מי מחזיק בסמכות על הפדגוגיה?`,
+        context: `חברת אד-טק מסחרית מציעה פלטפורמת למידה אדפטיבית "סגורה" הקובעת אוטומטית לכל תלמיד מה ילמד ומתי, ומבטיחה תוצאות זהות ואובייקטיביות בכל בית ספר. צוות ההיגוי מתלבט כיצד לקבוע את סמכות ההחלטה בין האלגוריתם, ההנהלה, המורים והתלמידים.`,
+        question: `מה תהיה עמדתכם העקרונית בנוגע לאימוץ הפלטפורמה ולסמכות ההחלטה?`,
+        choices: [
+          {
+            id: `5a`,
+            label: `אפשרות א׳`,
+            title: `להפקיד את הניווט בידי האלגוריתם — "מערכת אובייקטיבית וניטרלית תיתן תוצאה אחידה לכולם"`,
+            desc: `לאפשר למערכת לקבוע את רצף ההוראה באופן עצמאי כדי להבטיח אחידות ארגונית בכל הכיתות.`,
+            agencyDelta: -15,
+            entangledDelta: -15,
+            tone: `determinism`,
+            stance: `אשליית האובייקטיביות, החפצה ואוטונומיה`,
+            analysis: `הבחירה מניחה שהאלגוריתם נוצר בוואקום ניטרלי ויעבוד זהה בכל סביבה, תוך התעלמות מכך שטכנולוגיות מגלמות סדרי עדיפויות, ערכים חברתיים ואינטרסים מסחריים של מפתחיהן.`,
+            theoryLink: `פרנק ובסטר (2014) מראה שטכנולוגיה נוצרת מתוך הקשר חברתי ואינטרסים כלכליים ואינה מונחתת מן השמיים; מרקו קאלץ (2019) מזהיר מסיבתיות חד-כיוונית ואינטרסים כלכליים המניעים את התחום.`
+          },
+          {
+            id: `5b`,
+            label: `אפשרות ב׳`,
+            title: `להציב את המערכת כשותפה שקופה בתוך סוכנות משותפת: מורים ותלמידים שומרים על סמכות התכנון והביקורת`,
+            desc: `לבחור רק כלים המאפשרים שקיפות וגמישות פדגוגית, ולבנות הסכמות משותפות בין מורים, תלמידים ומומחי טכנולוגיה על אופן השזירה.`,
+            agencyDelta: 15,
+            entangledDelta: 15,
+            tone: `entangled`,
+            stance: `סוכנות משותפת (Collective Agency) ועיצוב השזירה`,
+            analysis: `השאלה החשובה בעיצוב הוראה אינה "מי מוביל — הטכנולוגיה או האדם", אלא איך מתכננים את השזירה ביניהם ומי מחזיק בסמכות להחליט עליה. כאן הסמכות נותרת בידי הקהילה החינוכית בדיאלוג מתמשך עם הסביבה הטכנולוגית.`,
+            theoryLink: `טים פאונס (2022) קובע כי למידה משמעותית אינה מוכתבת מראש על ידי מעצב התוכנה ואף לא על ידי המורה לבדו, אלא נוצרת בדיאלוג, שיתוף פעולה והתאמה דינמית בין המורה, התלמידים והטכנולוגיה.`
+          },
+          {
+            id: `5c`,
+            label: `אפשרות ג׳`,
+            title: `להשתמש במערכת רק כ"נספח טכני" בסוף השבוע, מבלי לערב תלמידים ומורים בבחינת ההיגיון שלה`,
+            desc: `לשמר הפרדה מלאה בין הליבה הפדגוגית של המורה לבין התרגול הטכני הקצר במערכת.`,
+            agencyDelta: 2,
+            entangledDelta: -9,
+            tone: `neutrality`,
+            stance: `הפרדה דיכוטומית ("טכנולוגיה בסוף")`,
+            analysis: `השארת המערכת בשוליים בלי לבחון כיצד היא מעצבת את חוויית הלמידה או מה הערכים המוטמעים בה משאירה את ההפרדה בין פדגוגיה לטכנולוגיה על כנה ומונעת התאמה דינמית.`,
+            theoryLink: `לפי פאונס (2022), כל הפרדה בין "טכנולוגיה תחילה" ל"פדגוגיה תחילה" מחמיצה את האתגר האמיתי של עיצוב הוראה בעידן הדיגיטלי.`
+          }
+        ]
+      }
+    ];
+
+    const DISCUSSION_QUESTIONS = [
+      `איך ניתן לרתום את כוחו של הנרטיב הטכנולוגי לגיוס תקציבים ותשתיות בבית הספר, מבלי ליפול ל"מעגל ההייפ, התקווה והאכזבה" שמתאר סלווין (2021)?`,
+      `היכן בהוראה היומיומית שלכם הכלי הדיגיטלי כבר מזמין או מכתיב דרכי פעולה (Affordances) בלי שנעשתה על כך בחירה פדגוגית מודעת?`,
+      `במערכת החינוך שלכם — מי מחזיק כיום בסמכות להחליט על השזירה בין טכנולוגיה לפדגוגיה: ספקי תוכנה, הנהלה, מורים או גם התלמידים עצמם?`,
+      `אילו מדדים איכותיים ותהליכי חשיבה עמוקים הייתם מוסיפים לדו"ח הערכה של רפורמה דיגיטלית, מעבר לספירת מכשירים, שעות מסך ונתוני כניסות (ובסטר, 2014; רוזאק, 1986)?`
+    ];
+
+    // Application state (single source of truth, synced via notebookAppApi)
+    let appState = {
+      currentStep: 0, // 0..4 for dilemmas, 5 for summary screen
+      agencyScore: 50,
+      entangledScore: 50,
+      lastAgencyDelta: null,
+      lastEntangledDelta: null,
+      history: [] // array of { scenarioId, scenarioTitle, choiceId, choiceTitle, stance, agencyDelta, entangledDelta }
+    };
+
+    function clampScore(val) {
+      return Math.max(0, Math.min(100, Math.round(val)));
+    }
+
+    function formatSigned(num) {
+      if (num > 0) return `+${num}`;
+      return `${num}`;
+    }
+
+    function getAgencyStatusLabel(score) {
+      if (score >= 75) return `סוכנות מורה חזקה ומעצבת`;
+      if (score >= 55) return `סוכנות מתפתחת`;
+      if (score >= 40) return `מאוזן — נדרשת ערנות`;
+      return `שחיקת סוכנות (אוליבר, 2011)`;
+    }
+
+    function getEntangledStatusLabel(score) {
+      if (score >= 75) return `שזירה פדגוגית עמוקה`;
+      if (score >= 55) return `תנועה לכיוון שזירה`;
+      if (score >= 40) return `מתח בין כלי לפדגוגיה`;
+      return `מלכודת דטרמיניסטית / ניטרליות`;
+    }
+
+    function getProfileData(agency, entangled) {
+      if (agency >= 62 && entangled >= 62) {
+        return {
+          chip: `מנהיגות של פדגוגיה שזורה`,
+          title: `מוביל/ת פדגוגיה שזורה וסוכנות משותפת`,
+          desc: `לאורך הדילמות הוכחת יכולת עקבית לצאת מהחשיבה הדיכוטומית שבין "טכנולוגיה תחילה" ל"פדגוגיה תחילה". בחרת לראות בכלי הדיגיטלי שותף שמזמין אפשרויות פעולה (Affordances) אך אינו מכתיב לבדו את התוצאה, תוך חיזוק סוכנות המורה והדיאלוג עם התלמידים וההקשר החברתי.`,
+          theoryNote: `פרופיל זה מתיישב עם המודל של טים פאונס (2022) להרחבת TPACK ולסוכנות משותפת (Collective Agency), לצד שמירה על תפיסת המורה כמעצב פדגוגי מרכזי (Oliver, 2011).`
+        };
+      }
+      if (agency >= 50 && entangled < 62) {
+        return {
+          chip: `נטייה לאשליית הניטרליות`,
+          title: `שומר/ת סוכנות המורה ב"אשליית הניטרליות"`,
+          desc: `דאגת לשמור על חופש הפעולה ועל מעמד המורה בכיתה — הישג חשוב המונע כרסום בסוכנות. עם זאת, לעיתים התייחסת לטכנולוגיה כאל כלי ניטרלי ופסיבי לחלוטין שניתן להניח בצד או להשתמש בו בלי לבחון כיצד הוא משנה את דרכי החשיבה, הערכים ומבנה השיעור.`,
+          theoryNote: `מרקו קאלץ (2019) וטים פאונס (2022) מראים שגישת "פדגוגיה תחילה / טכנולוגיה בסוף" מפרידה אף היא בין הכלי לפדגוגיה. הצעד הבא הוא לבחון במודע את הזמנות הפעולה (Affordances) שכל כלי מביא עמו.`
+        };
+      }
+      if (agency < 50 && entangled >= 50) {
+        return {
+          chip: `דטרמיניזם רך בדרך לשזירה`,
+          title: `מנהיגות פרגמטית בצומת של דטרמיניזם רך`,
+          desc: `החלטותיך מראות רצון לשלב טכנולוגיה מתוך התאמה להקשר ולמטרות, אך בחלק מהדילמות ניתן משקל רב מדי ללחצי המערכת, ללוחות הזמנים החיצוניים או לסטנדרטיזציה טכנית על חשבון שיקול הדעת העצמאי של המורים.`,
+          theoryNote: `על רצף הדטרמיניזם שתיאר דניאל צ'נדלר (1995), מדובר בתנועה בין דטרמיניזם רך לשזירה. חיזוק קולם של המורים והתלמידים בעיצוב הכלים יעביר את המנהיגות לאזור הפדגוגיה השזורה.`
+        };
+      }
+      return {
+        chip: `אזהרת מלכודת הדטרמיניזם`,
+        title: `במלכודת הדטרמיניזם הקשיח ומעגל ההייפ`,
+        desc: `בחלק ניכר מהדילמות הטכנולוגיה נתפסה ככוח אוטונומי שמכתיב את הקצב, מוביל סיבתית לשיפור אוטומטי ונמדד במדדים כמותיים צרים (מכשירים ושעות מסך). גישה זו נוטה לדחוק את המורים לתפקיד של מסתגלים פסיביים ומזינה ציפיות מופרזות שאחריהן מגיעה אכזבה.`,
+        theoryNote: `מרקו קאלץ (2019), מרטין אוליבר (2011), ניל סלווין (2021) ופרנק ובסטר (2014) מזהירים משילוב של סיבתיות חד-כיוונית, החפצה ומדדים טכניים צרים. עצירה לבחינת שאלת "לשם מה ובאיזה הקשר" תחזיר את הפדגוגיה ואת האדם למרכז השזירה.`
+      };
+    }
+
+    async function persistState() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === 'function') {
+        try {
+          await window.notebookAppApi.setAppState(appState);
+        } catch (err) {
+          // Graceful handling in sandbox
+        }
+      }
+    }
+
+    function renderIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    function renderHUD() {
+      const total = SCENARIOS.length;
+      const isSummary = appState.currentStep >= total;
+
+      const progressText = document.getElementById('progress-text');
+      if (progressText) {
+        progressText.textContent = isSummary
+          ? `הושלמו ${total} מתוך ${total} דילמות — מסך סיכום`
+          : `דילמה ${appState.currentStep + 1} מתוך ${total}`;
+      }
+
+      const stepDots = document.getElementById('step-dots');
+      if (stepDots) {
+        stepDots.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+          const dot = document.createElement('span');
+          const answered = i < appState.history.length;
+          const isCurrent = !isSummary && i === appState.currentStep;
+          dot.className = `step-dot${answered ? ' done' : ''}${isCurrent ? ' current' : ''}`;
+          stepDots.appendChild(dot);
+        }
+      }
+
+      // Agency Gauge
+      const agencyVal = document.getElementById('agency-score-val');
+      const agencyFill = document.getElementById('agency-gauge-fill');
+      const agencyBar = document.getElementById('agency-progressbar');
+      const agencyStatus = document.getElementById('agency-status-pill');
+      const agencyDeltaEl = document.getElementById('agency-delta-badge');
+
+      if (agencyVal) agencyVal.textContent = String(appState.agencyScore);
+      if (agencyFill) agencyFill.style.width = `${appState.agencyScore}%`;
+      if (agencyBar) agencyBar.setAttribute('aria-valuenow', String(appState.agencyScore));
+      if (agencyStatus) agencyStatus.textContent = getAgencyStatusLabel(appState.agencyScore);
+
+      if (agencyDeltaEl) {
+        if (appState.lastAgencyDelta === null) {
+          agencyDeltaEl.classList.add('hidden');
+        } else {
+          agencyDeltaEl.classList.remove('hidden', 'pos', 'neg', 'neutral');
+          agencyDeltaEl.classList.add(appState.lastAgencyDelta > 0 ? 'pos' : appState.lastAgencyDelta < 0 ? 'neg' : 'neutral');
+          agencyDeltaEl.innerHTML = `עדכון אחרון: <bdi dir="ltr">${formatSigned(appState.lastAgencyDelta)}</bdi>`;
+        }
+      }
+
+      // Entangled Pedagogy Gauge
+      const entVal = document.getElementById('entangled-score-val');
+      const entFill = document.getElementById('entangled-gauge-fill');
+      const entBar = document.getElementById('entangled-progressbar');
+      const entStatus = document.getElementById('entangled-status-pill');
+      const entDeltaEl = document.getElementById('entangled-delta-badge');
+
+      if (entVal) entVal.textContent = String(appState.entangledScore);
+      if (entFill) entFill.style.width = `${appState.entangledScore}%`;
+      if (entBar) entBar.setAttribute('aria-valuenow', String(appState.entangledScore));
+      if (entStatus) entStatus.textContent = getEntangledStatusLabel(appState.entangledScore);
+
+      if (entDeltaEl) {
+        if (appState.lastEntangledDelta === null) {
+          entDeltaEl.classList.add('hidden');
+        } else {
+          entDeltaEl.classList.remove('hidden', 'pos', 'neg', 'neutral');
+          entDeltaEl.classList.add(appState.lastEntangledDelta > 0 ? 'pos' : appState.lastEntangledDelta < 0 ? 'neg' : 'neutral');
+          entDeltaEl.innerHTML = `עדכון אחרון: <bdi dir="ltr">${formatSigned(appState.lastEntangledDelta)}</bdi>`;
+        }
+      }
+    }
+
+    function renderStage() {
+      const dilemmaStage = document.getElementById('dilemma-stage');
+      const summarySection = document.getElementById('summary-section');
+      const feedbackPanel = document.getElementById('feedback-panel');
+
+      if (!dilemmaStage || !summarySection) return;
+
+      if (appState.currentStep >= SCENARIOS.length) {
+        dilemmaStage.classList.add('hidden');
+        summarySection.classList.remove('hidden');
+        renderSummary();
+        renderIcons();
+        return;
+      }
+
+      summarySection.classList.add('hidden');
+      dilemmaStage.classList.remove('hidden');
+
+      const scenario = SCENARIOS[appState.currentStep];
+      const existingEntry = appState.history[appState.currentStep] || null;
+
+      const badgeEl = document.getElementById('dilemma-badge');
+      const topicEl = document.getElementById('dilemma-topic-chip');
+      const titleEl = document.getElementById('dilemma-title');
+      const contextEl = document.getElementById('dilemma-context');
+      const questionEl = document.getElementById('dilemma-question');
+      const choicesList = document.getElementById('choices-list');
+
+      if (badgeEl) badgeEl.textContent = scenario.badge;
+      if (topicEl) topicEl.textContent = scenario.topic;
+      if (titleEl) titleEl.textContent = scenario.title;
+      if (contextEl) contextEl.textContent = scenario.context;
+      if (questionEl) questionEl.textContent = scenario.question;
+
+      if (choicesList) {
+        choicesList.innerHTML = '';
+        scenario.choices.forEach(function(choice) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'choice-btn';
+
+          if (existingEntry) {
+            btn.disabled = true;
+            if (existingEntry.choiceId === choice.id) {
+              btn.classList.add('selected');
+            } else {
+              btn.classList.add('dimmed');
+            }
+          }
+
+          btn.onclick = function() {
+            selectChoice(choice.id);
+          };
+
+          const headerDiv = document.createElement('div');
+          headerDiv.className = 'choice-header';
+
+          const idxSpan = document.createElement('span');
+          idxSpan.className = 'choice-index';
+          idxSpan.textContent = choice.label;
+          headerDiv.appendChild(idxSpan);
+
+          if (existingEntry && existingEntry.choiceId === choice.id) {
+            const chosenTag = document.createElement('span');
+            chosenTag.className = 'ink-chip';
+            chosenTag.textContent = `הבחירה שלך`;
+            headerDiv.appendChild(chosenTag);
+          }
+
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'choice-title';
+          titleSpan.textContent = choice.title;
+
+          const descSpan = document.createElement('span');
+          descSpan.className = 'choice-desc';
+          descSpan.textContent = choice.desc;
+
+          btn.appendChild(headerDiv);
+          btn.appendChild(titleSpan);
+          btn.appendChild(descSpan);
+          choicesList.appendChild(btn);
+        });
+      }
+
+      if (feedbackPanel) {
+        if (existingEntry) {
+          const chosenObj = scenario.choices.find(function(c) { return c.id === existingEntry.choiceId; });
+          if (chosenObj) {
+            renderFeedback(chosenObj, appState.currentStep);
+            feedbackPanel.classList.remove('hidden');
+          }
+        } else {
+          feedbackPanel.classList.add('hidden');
+        }
+      }
+
+      renderIcons();
+    }
+
+    function renderFeedback(choice, stepIndex) {
+      const panel = document.getElementById('feedback-panel');
+      const stanceTitle = document.getElementById('feedback-stance-title');
+      const deltasWrap = document.getElementById('feedback-deltas');
+      const analysisEl = document.getElementById('feedback-analysis');
+      const theoryLinkEl = document.getElementById('feedback-theory-link');
+      const nextBtn = document.getElementById('next-dilemma-btn');
+
+      if (!panel) return;
+
+      panel.classList.remove('tone-determinism', 'tone-neutrality', 'tone-entangled');
+      if (choice.tone === 'determinism') panel.classList.add('tone-determinism');
+      else if (choice.tone === 'neutrality') panel.classList.add('tone-neutrality');
+      else panel.classList.add('tone-entangled');
+
+      if (stanceTitle) stanceTitle.textContent = choice.stance;
+      if (analysisEl) analysisEl.textContent = choice.analysis;
+      if (theoryLinkEl) theoryLinkEl.textContent = choice.theoryLink;
+
+      if (deltasWrap) {
+        deltasWrap.innerHTML = '';
+
+        const agencyBadge = document.createElement('span');
+        agencyBadge.className = `delta-badge ${choice.agencyDelta > 0 ? 'pos' : choice.agencyDelta < 0 ? 'neg' : 'neutral'}`;
+        agencyBadge.innerHTML = `סוכנות המורה: <bdi dir="ltr">${formatSigned(choice.agencyDelta)}</bdi>`;
+
+        const entBadge = document.createElement('span');
+        entBadge.className = `delta-badge ${choice.entangledDelta > 0 ? 'pos' : choice.entangledDelta < 0 ? 'neg' : 'neutral'}`;
+        entBadge.innerHTML = `פדגוגיה שזורה: <bdi dir="ltr">${formatSigned(choice.entangledDelta)}</bdi>`;
+
+        deltasWrap.appendChild(agencyBadge);
+        deltasWrap.appendChild(entBadge);
+      }
+
+      if (nextBtn) {
+        const isLast = stepIndex >= SCENARIOS.length - 1;
+        nextBtn.innerHTML = isLast
+          ? `<span>למסך הסיכום והפרופיל המנהיגותי</span><i data-lucide="award" aria-hidden="true" style="width:18px;height:18px;"></i>`
+          : `<span>לדילמה הבאה</span><i data-lucide="arrow-left" aria-hidden="true" style="width:18px;height:18px;"></i>`;
+      }
+    }
+
+    async function selectChoice(choiceId) {
+      if (appState.currentStep >= SCENARIOS.length) return;
+      if (appState.history[appState.currentStep]) return; // already answered
+
+      const scenario = SCENARIOS[appState.currentStep];
+      const choice = scenario.choices.find(function(c) { return c.id === choiceId; });
+      if (!choice) return;
+
+      appState.agencyScore = clampScore(appState.agencyScore + choice.agencyDelta);
+      appState.entangledScore = clampScore(appState.entangledScore + choice.entangledDelta);
+      appState.lastAgencyDelta = choice.agencyDelta;
+      appState.lastEntangledDelta = choice.entangledDelta;
+
+      appState.history.push({
+        scenarioId: scenario.id,
+        scenarioTitle: scenario.title,
+        choiceId: choice.id,
+        choiceTitle: choice.title,
+        stance: choice.stance,
+        agencyDelta: choice.agencyDelta,
+        entangledDelta: choice.entangledDelta
+      });
+
+      renderHUD();
+      renderStage();
+      await persistState();
+
+      const feedbackPanel = document.getElementById('feedback-panel');
+      if (feedbackPanel) {
+        feedbackPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    async function goToNextStep() {
+      if (!appState.history[appState.currentStep]) return;
+      appState.currentStep += 1;
+      renderHUD();
+      renderStage();
+      await persistState();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderSummary() {
+      const profile = getProfileData(appState.agencyScore, appState.entangledScore);
+
+      const chipEl = document.getElementById('summary-archetype-chip');
+      const titleEl = document.getElementById('profile-title');
+      const descEl = document.getElementById('profile-desc');
+      const theoryEl = document.getElementById('profile-theory-note');
+
+      if (chipEl) chipEl.textContent = profile.chip;
+      if (titleEl) titleEl.textContent = profile.title;
+      if (descEl) descEl.textContent = profile.desc;
+      if (theoryEl) theoryEl.textContent = profile.theoryNote;
+
+      // Update SVG Quadrant Marker (X = agencyScore 0..100 mapped to 44..316, Y = entangledScore 0..100 mapped to 234..22)
+      const px = 44 + (appState.agencyScore / 100) * 272;
+      const py = 234 - (appState.entangledScore / 100) * 212;
+      const halo = document.getElementById('quadrant-halo');
+      const point = document.getElementById('quadrant-point');
+      if (halo) {
+        halo.setAttribute('cx', px.toFixed(1));
+        halo.setAttribute('cy', py.toFixed(1));
+      }
+      if (point) {
+        point.setAttribute('cx', px.toFixed(1));
+        point.setAttribute('cy', py.toFixed(1));
+      }
+
+      // Render decision journey log
+      const journeyGrid = document.getElementById('journey-grid');
+      if (journeyGrid) {
+        journeyGrid.innerHTML = '';
+        appState.history.forEach(function(item, idx) {
+          const row = document.createElement('div');
+          row.className = 'journey-item';
+
+          const main = document.createElement('div');
+          main.className = 'journey-item-main';
+
+          const t = document.createElement('span');
+          t.className = 'journey-item-title';
+          t.textContent = `${idx + 1}. ${item.scenarioTitle}`;
+
+          const c = document.createElement('span');
+          c.className = 'journey-item-choice';
+          c.textContent = `החלטתך: ${item.choiceTitle} (${item.stance})`;
+
+          main.appendChild(t);
+          main.appendChild(c);
+
+          const badges = document.createElement('div');
+          badges.className = 'feedback-deltas';
+
+          const b1 = document.createElement('span');
+          b1.className = `delta-badge ${item.agencyDelta > 0 ? 'pos' : item.agencyDelta < 0 ? 'neg' : 'neutral'}`;
+          b1.innerHTML = `סוכנות: <bdi dir="ltr">${formatSigned(item.agencyDelta)}</bdi>`;
+
+          const b2 = document.createElement('span');
+          b2.className = `delta-badge ${item.entangledDelta > 0 ? 'pos' : item.entangledDelta < 0 ? 'neg' : 'neutral'}`;
+          b2.innerHTML = `שזירה: <bdi dir="ltr">${formatSigned(item.entangledDelta)}</bdi>`;
+
+          badges.appendChild(b1);
+          badges.appendChild(b2);
+
+          row.appendChild(main);
+          row.appendChild(badges);
+          journeyGrid.appendChild(row);
+        });
+      }
+
+      // Render discussion questions
+      const discList = document.getElementById('discussion-list');
+      if (discList) {
+        discList.innerHTML = '';
+        DISCUSSION_QUESTIONS.forEach(function(qText) {
+          const li = document.createElement('li');
+          li.textContent = qText;
+          discList.appendChild(li);
+        });
+      }
+    }
+
+    function handleResetClick(btn) {
+      if (!btn) return;
+      if (btn.dataset.armed !== 'true') {
+        btn.dataset.armed = 'true';
+        btn.textContent = `לחיצה נוספת לאיפוס`;
+        setTimeout(function() {
+          if (btn && btn.dataset.armed === 'true') {
+            btn.dataset.armed = 'false';
+            btn.innerHTML = `<i data-lucide="rotate-ccw" aria-hidden="true" style="width:16px;height:16px;"></i>איפוס סימולציה`;
+            renderIcons();
+          }
+        }, 3500);
+        return;
+      }
+      btn.dataset.armed = 'false';
+      btn.innerHTML = `<i data-lucide="rotate-ccw" aria-hidden="true" style="width:16px;height:16px;"></i>איפוס סימולציה`;
+      restartSimulation();
+    }
+
+    async function restartSimulation() {
+      appState = {
+        currentStep: 0,
+        agencyScore: 50,
+        entangledScore: 50,
+        lastAgencyDelta: null,
+        lastEntangledDelta: null,
+        history: []
+      };
+      const exportMsg = document.getElementById('export-status-msg');
+      if (exportMsg) exportMsg.textContent = '';
+
+      renderHUD();
+      renderStage();
+      await persistState();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function exportSummaryReport() {
+      const profile = getProfileData(appState.agencyScore, appState.entangledScore);
+      const lines = [
+        `סיכום סימולטור: מלכודת הדטרמיניזם`,
+        `====================================`,
+        `פרופיל מנהיגותי: ${profile.title}`,
+        `מדד סוכנות המורה (Oliver, 2011): ${appState.agencyScore} / 100`,
+        `מדד פדגוגיה שזורה (Fawns, 2022 / Kalz, 2019): ${appState.entangledScore} / 100`,
+        ``,
+        `תמצית הפרופיל:`,
+        profile.desc,
+        ``,
+        `פירוט ההחלטות:`,
+        ...appState.history.map(function(item, idx) {
+          return `${idx + 1}. ${item.scenarioTitle}\n   בחירה: ${item.choiceTitle}\n   עמדה תיאורטית: ${item.stance} (סוכנות ${formatSigned(item.agencyDelta)}, שזירה ${formatSigned(item.entangledDelta)})`;
+        }),
+        ``,
+        `שאלות רפלקטיביות לדיון:`,
+        ...DISCUSSION_QUESTIONS.map(function(q, i) { return `${i + 1}. ${q}`; })
+      ];
+
+      const content = lines.join('\n');
+      const statusEl = document.getElementById('export-status-msg');
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === 'function') {
+        window.notebookAppApi.triggerFileDownload({
+          content: content,
+          contentType: 'text/plain',
+          encoding: 'UTF-8',
+          filename: 'determinism-trap-summary.txt'
+        });
+        if (statusEl) statusEl.textContent = `הקובץ נשלח להורדה בהצלחה.`;
+      } else {
+        if (statusEl) statusEl.textContent = `ייצוא זמין בסביבת המחברת.`;
+      }
+    }
+
+    async function initApp() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === 'function') {
+        try {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && typeof saved.currentStep === 'number' && Array.isArray(saved.history)) {
+            appState = {
+              currentStep: Math.max(0, Math.min(SCENARIOS.length, saved.currentStep)),
+              agencyScore: typeof saved.agencyScore === 'number' ? clampScore(saved.agencyScore) : 50,
+              entangledScore: typeof saved.entangledScore === 'number' ? clampScore(saved.entangledScore) : 50,
+              lastAgencyDelta: typeof saved.lastAgencyDelta === 'number' ? saved.lastAgencyDelta : null,
+              lastEntangledDelta: typeof saved.lastEntangledDelta === 'number' ? saved.lastEntangledDelta : null,
+              history: saved.history
+            };
+          }
+        } catch (err) {
+          // Fallback to default state
+        }
+      }
+
+      renderHUD();
+      renderStage();
+      renderIcons();
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === 'function') {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
